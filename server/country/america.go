@@ -1,13 +1,12 @@
 package country
 
 import (
-	"context"
 	"net/http"
 	"trace-demo/server/otel"
 )
 
 func America(w http.ResponseWriter, r *http.Request) {
-	ctx, span := otel.Tracer.Start(r.Context(), "America")
+	ctx, span := otel.Tracer.Start(r.Context(), "America Custom")
 	r.WithContext(ctx)
 	defer span.End()
 
@@ -16,52 +15,56 @@ func America(w http.ResponseWriter, r *http.Request) {
 
 // new-york -> los-angeles -> chicago
 func NewYork(w http.ResponseWriter, r *http.Request) {
-	newyork(r.Context())
+	newyork(r)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("New York"))
 }
 
 // los-angeles -> chicago
 func LosAngeles(w http.ResponseWriter, r *http.Request) {
-	losangeles(r.Context())
+	losangeles(r)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Los Angeles"))
 }
 
 func Chicago(w http.ResponseWriter, r *http.Request) {
-	chicago(r.Context())
+	chicago(r)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Chicago"))
 }
 
 // to england
 func Edmond(w http.ResponseWriter, r *http.Request) {
-	edmond(r.Context())
+	edmond(r)
 	England(w, r)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Edmond"))
 }
 
-func newyork(ctx context.Context) {
-	_, span := otel.Tracer.Start(ctx, "New York")
+func newyork(r *http.Request) {
+	ctx, span := otel.Tracer.Start(r.Context(), "New York")
+	r.WithContext(ctx)
 	defer span.End()
 
-	losangeles(ctx)
+	losangeles(r)
 }
 
-func losangeles(ctx context.Context) {
-	_, span := otel.Tracer.Start(ctx, "Los Angeles")
+func losangeles(r *http.Request) {
+	ctx, span := otel.Tracer.Start(r.Context(), "Los Angeles")
+	r.WithContext(ctx)
 	defer span.End()
 
-	chicago(ctx)
+	chicago(r)
 }
 
-func chicago(ctx context.Context) {
-	_, span := otel.Tracer.Start(ctx, "Chicago")
+func chicago(r *http.Request) {
+	ctx, span := otel.Tracer.Start(r.Context(), "Chicago")
+	r.WithContext(ctx)
 	defer span.End()
 }
 
-func edmond(ctx context.Context) {
-	_, span := otel.Tracer.Start(ctx, "Edmond")
+func edmond(r *http.Request) {
+	ctx, span := otel.Tracer.Start(r.Context(), "Edmond")
+	r.WithContext(ctx)
 	defer span.End()
 }
