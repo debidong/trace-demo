@@ -1,14 +1,14 @@
 package country
 
 import (
+	"context"
 	"net/http"
-
-	"go.opentelemetry.io/otel"
+	"trace-demo/server/otel"
 )
 
 func England(w http.ResponseWriter, r *http.Request) {
-	tracer := otel.Tracer("england")
-	_, span := tracer.Start(r.Context(), "England")
+	ctx, span := otel.Tracer.Start(r.Context(), "England")
+	r.WithContext(ctx)
 	defer span.End()
 
 	englandPool.GetRandomCity()(w, r)
@@ -16,57 +16,52 @@ func England(w http.ResponseWriter, r *http.Request) {
 
 // london -> manchester -> liverpool
 func London(w http.ResponseWriter, r *http.Request) {
-	london(w, r)
+	london(r.Context())
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("London"))
 }
 
 // manchester -> liverpool
 func Manchester(w http.ResponseWriter, r *http.Request) {
-	manchester(w, r)
+	manchester(r.Context())
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Manchester"))
 }
 
 func Liverpool(w http.ResponseWriter, r *http.Request) {
-	liverpool(w, r)
+	liverpool(r.Context())
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Liverpool"))
 }
 
 // to china
 func Edinburgh(w http.ResponseWriter, r *http.Request) {
-	edinburgh(w, r)
+	edinburgh(r.Context())
+	China(w, r)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Edinburgh"))
 }
 
-func london(w http.ResponseWriter, r *http.Request) {
-	tracer := otel.Tracer("england")
-	_, span := tracer.Start(r.Context(), "London")
+func london(ctx context.Context) {
+	_, span := otel.Tracer.Start(ctx, "London")
 	defer span.End()
 
-	manchester(w, r)
+	manchester(ctx)
 }
 
-func manchester(w http.ResponseWriter, r *http.Request) {
-	tracer := otel.Tracer("england")
-	_, span := tracer.Start(r.Context(), "Manchester")
+func manchester(ctx context.Context) {
+	_, span := otel.Tracer.Start(ctx, "Manchester")
 	defer span.End()
 
-	liverpool(w, r)
+	liverpool(ctx)
 }
 
-func liverpool(w http.ResponseWriter, r *http.Request) {
-	tracer := otel.Tracer("england")
-	_, span := tracer.Start(r.Context(), "Liverpool")
+func liverpool(ctx context.Context) {
+	_, span := otel.Tracer.Start(ctx, "Liverpool")
 	defer span.End()
 }
 
-func edinburgh(w http.ResponseWriter, r *http.Request) {
-	tracer := otel.Tracer("england")
-	_, span := tracer.Start(r.Context(), "Edinburgh")
+func edinburgh(ctx context.Context) {
+	_, span := otel.Tracer.Start(ctx, "Edinburgh")
 	defer span.End()
-
-	China(w, r)
 }

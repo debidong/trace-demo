@@ -1,12 +1,14 @@
 package country
 
 import (
+	"context"
 	"net/http"
 	"trace-demo/server/otel"
 )
 
 func China(w http.ResponseWriter, r *http.Request) {
-	_, span := otel.Tracer.Start(r.Context(), "China")
+	ctx, span := otel.Tracer.Start(r.Context(), "China")
+	r.WithContext(ctx)
 	defer span.End()
 
 	chinaPool.GetRandomCity()(w, r)
@@ -14,53 +16,52 @@ func China(w http.ResponseWriter, r *http.Request) {
 
 // beijing -> shanghai -> guangzhou
 func Beijing(w http.ResponseWriter, r *http.Request) {
-	beijing(w, r)
+	beijing(r.Context())
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Beijing"))
 }
 
 // shanghai -> guangzhou
 func Shanghai(w http.ResponseWriter, r *http.Request) {
-	shanghai(w, r)
+	shanghai(r.Context())
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Shanghai"))
 }
 
 func Guangzhou(w http.ResponseWriter, r *http.Request) {
-	guangzhou(w, r)
+	guangzhou(r.Context())
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Guangzhou"))
 }
 
 // to america
 func Handan(w http.ResponseWriter, r *http.Request) {
-	handan(w, r)
+	handan(r.Context())
+	America(w, r)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Handan"))
 }
 
-func beijing(w http.ResponseWriter, r *http.Request) {
-	_, span := otel.Tracer.Start(r.Context(), "Beijing")
+func beijing(ctx context.Context) {
+	_, span := otel.Tracer.Start(ctx, "Beijing")
 	defer span.End()
 
-	shanghai(w, r)
+	shanghai(ctx)
 }
 
-func shanghai(w http.ResponseWriter, r *http.Request) {
-	_, span := otel.Tracer.Start(r.Context(), "Shanghai")
+func shanghai(ctx context.Context) {
+	_, span := otel.Tracer.Start(ctx, "Shanghai")
 	defer span.End()
 
-	guangzhou(w, r)
+	guangzhou(ctx)
 }
 
-func guangzhou(w http.ResponseWriter, r *http.Request) {
-	_, span := otel.Tracer.Start(r.Context(), "Guangzhou")
+func guangzhou(ctx context.Context) {
+	_, span := otel.Tracer.Start(ctx, "Guangzhou")
 	defer span.End()
 }
 
-func handan(w http.ResponseWriter, r *http.Request) {
-	_, span := otel.Tracer.Start(r.Context(), "Handan")
+func handan(ctx context.Context) {
+	_, span := otel.Tracer.Start(ctx, "Handan")
 	defer span.End()
-
-	America(w, r)
 }

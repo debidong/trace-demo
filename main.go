@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"sync"
 	"trace-demo/requester"
 	"trace-demo/server"
 	"trace-demo/server/otel"
@@ -24,6 +23,7 @@ func main() {
 	if err != nil {
 		return
 	}
+
 	// Handle shutdown properly so nothing leaks.
 	defer func() {
 		err = errors.Join(err, otelShutdown(context.Background()))
@@ -36,18 +36,12 @@ func main() {
 	}()
 
 	requesters := make(map[string]*requester.Requester)
-	var wg sync.WaitGroup
-	wg.Add(len(countries))
 	for _, country := range countries {
-		go func(country string) {
-			defer wg.Done()
-			requester := requester.NewRequester(country)
-			requesters[country] = requester
-			requester.StartRequest()
-			log.Default().Println("main: started requester for", country)
-		}(country)
+		requester := requester.NewRequester(country)
+		requesters[country] = requester
+		requester.StartRequest()
+		log.Default().Println("main: started requester for", country)
 	}
-	wg.Wait()
 
 	select {
 	case err := <-srvErr:
