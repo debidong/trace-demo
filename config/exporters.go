@@ -1,7 +1,7 @@
-package server
+package config
 
 const (
-	ServerAddr = "localhost:8080"
+	JaegerEndpoint = "http://localhost:14268/api/traces"
 
 	// TODO: use otel collector
 	// OtelCollectorAddr = "localhost:4318"
