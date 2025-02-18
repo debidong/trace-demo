@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"trace-demo/server"
+	"trace-demo/config"
 )
 
 const (
@@ -52,5 +52,5 @@ func (r *Requester) request(url string) error {
 
 func formatRequestURL(url string) string {
 	prefix := "http:/"
-	return strings.Join([]string{prefix, server.ServerAddr, url}, "/")
+	return strings.Join([]string{prefix, config.ServerAddr, url}, "/")
 }

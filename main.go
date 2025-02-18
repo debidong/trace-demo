@@ -21,7 +21,7 @@ func main() {
 	// Set up OpenTelemetry.
 	otelShutdown, err := otel.SetupOTelSDK(ctx)
 	if err != nil {
-		return
+		panic(err)
 	}
 
 	// Handle shutdown properly so nothing leaks.
