@@ -1,0 +1,25 @@
+server:
+  china:
+    addr: localhost:8080
+    uri:
+      - /china/beijing
+      - /china/shanghai
+      - /china/guangzhou
+      - /china/handan
+  america:
+    addr: localhost:8081
+    uri:
+      - /america/new-york
+      - /america/los-angeles
+      - /america/chicago
+      - /america/edmond
+  england:
+    addr: localhost:8082
+    uri:
+      - /england/london
+      - /england/manchester
+      - /england/liverpool
+      - /england/edinburgh
+exporter:
+  jaeger:
+    addr: http://localhost:14268/api/traces
