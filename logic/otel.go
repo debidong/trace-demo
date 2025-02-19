@@ -1,10 +1,9 @@
-package otel
+package logic
 
 import (
 	"context"
 	"errors"
 	"time"
-	"trace-demo/config"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/jaeger"
@@ -19,11 +18,11 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
-var Tracer = otel.Tracer("trace-demo")
+var tracer = otel.Tracer("trace-demo")
 
 // SetupOTelSDK bootstraps the OpenTelemetry pipeline.
 // If it does not return an error, make sure to call shutdown for proper cleanup.
-func SetupOTelSDK(ctx context.Context) (shutdown func(context.Context) error, err error) {
+func SetupOTelSDK(ctx context.Context, srvName string) (shutdown func(context.Context) error, err error) {
 	var shutdownFuncs []func(context.Context) error
 
 	// shutdown calls cleanup functions registered via shutdownFuncs.
@@ -48,7 +47,7 @@ func SetupOTelSDK(ctx context.Context) (shutdown func(context.Context) error, er
 	otel.SetTextMapPropagator(prop)
 
 	// Set up trace provider.
-	tracerProvider, err := newTraceProvider()
+	tracerProvider, err := newTraceProvider(srvName)
 	if err != nil {
 		handleErr(err)
 		return
@@ -84,10 +83,11 @@ func newPropagator() propagation.TextMapPropagator {
 	)
 }
 
-func newTraceProvider() (*trace.TracerProvider, error) {
+func newTraceProvider(srvName string) (*trace.TracerProvider, error) {
+	jaegerEndpoint := MustLoadConfig().Exporter["jaeger"].Addr
 	traceExporter, err := jaeger.New(
 		jaeger.WithCollectorEndpoint(
-			jaeger.WithEndpoint(config.JaegerEndpoint),
+			jaeger.WithEndpoint(jaegerEndpoint),
 		),
 	)
 	if err != nil {
@@ -100,7 +100,7 @@ func newTraceProvider() (*trace.TracerProvider, error) {
 			trace.WithBatchTimeout(time.Second)),
 		trace.WithResource(
 			resource.NewSchemaless(
-				semconv.ServiceNameKey.String("trace-demo"),
+				semconv.ServiceNameKey.String(srvName),
 			),
 		),
 	)

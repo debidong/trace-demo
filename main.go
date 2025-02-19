@@ -3,56 +3,64 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"log"
 	"os"
 	"os/signal"
-	"trace-demo/requester"
-	"trace-demo/server"
-	"trace-demo/server/otel"
+	"trace-demo/logic"
 )
 
-var countries = []string{"china", "america", "england"}
-
 func main() {
-	// Handle SIGINT (CTRL+C) gracefully.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	// Set up OpenTelemetry.
-	otelShutdown, err := otel.SetupOTelSDK(ctx)
+	srvName := flag.String("n", "", "name of the server")
+	cfgPath := flag.String("c", "", "path to the config file")
+	flag.Parse()
+
+	if *cfgPath == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	if *srvName == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	logic.MustLoadConfig(*cfgPath)
+	otelShutdown, err := logic.SetupOTelSDK(ctx, *srvName)
 	if err != nil {
 		panic(err)
 	}
-
-	// Handle shutdown properly so nothing leaks.
 	defer func() {
 		err = errors.Join(err, otelShutdown(context.Background()))
 	}()
 
-	srv := server.NewServer(ctx)
-	srvErr := make(chan error, 1)
+	srv := logic.NewServer(*srvName)
+	errSrv := make(chan error)
 	go func() {
-		srvErr <- srv.ListenAndServe()
+		err := srv.ListenAndServe()
+		if err != nil {
+			errSrv <- err
+		}
 	}()
 
-	requesters := make(map[string]*requester.Requester)
-	for _, country := range countries {
-		requester := requester.NewRequester(country)
-		requesters[country] = requester
-		requester.StartRequest()
-		log.Default().Println("main: started requester for", country)
-	}
+	requester := logic.NewRequester(*srvName)
+	requester.StartRequest()
+
+	defer func() {
+		if err != nil {
+			log.Default().Fatal(err)
+		}
+		requester.StopRequest()
+		srv.Shutdown(context.Background())
+	}()
 
 	select {
-	case err := <-srvErr:
-		log.Default().Println("main: server error", err)
+	case _err := <-errSrv:
+		errors.Join(err, _err)
 	case <-ctx.Done():
 		log.Default().Println("main: context done")
 	}
-
-	for country, requester := range requesters {
-		requester.StopRequest()
-		log.Default().Println("main: stopped requester for", country)
-	}
-	log.Default().Println("main: program terminated")
 }

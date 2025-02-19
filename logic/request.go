@@ -1,10 +1,9 @@
-package requester
+package logic
 
 import (
+	"math/rand"
 	"net/http"
-	"strings"
 	"time"
-	"trace-demo/config"
 )
 
 const (
@@ -12,45 +11,43 @@ const (
 )
 
 type Requester struct {
-	country string
+	srvName string
 	ticker  *time.Ticker
 	stop    chan struct{}
 }
 
-func NewRequester(country string) *Requester {
+func NewRequester(srvName string) *Requester {
 	return &Requester{
-		country: country,
+		srvName: srvName,
 	}
 }
 
 func (r *Requester) StartRequest() {
 	r.stop = make(chan struct{})
 	r.ticker = time.NewTicker(requestInterval)
+	uris := MustLoadConfig().Server[r.srvName].Uri
+
 	go func() {
 		for {
 			select {
 			case <-r.stop:
 				return
 			case <-r.ticker.C:
-				r.request(r.country)
+				r.request(uris[rand.Intn(len(uris))])
 			}
 		}
 	}()
 }
 
 func (r *Requester) StopRequest() {
+	r.ticker.Stop()
 	close(r.stop)
 }
 
 func (r *Requester) request(url string) error {
-	_, err := http.Get(formatRequestURL(url))
+	_, err := http.Get(FormatRequestURL(r.srvName, url))
 	if err != nil {
 		panic(err)
 	}
 	return nil
-}
-
-func formatRequestURL(url string) string {
-	prefix := "http:/"
-	return strings.Join([]string{prefix, config.ServerAddr, url}, "/")
 }
