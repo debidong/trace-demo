@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 func NewServer(srvName string) *http.Server {
@@ -53,8 +55,12 @@ func newHTTPHandler(srvName string) http.Handler {
 		// get resource
 		next := rand.Intn(len(urls))
 		req, _ := http.NewRequestWithContext(ctx, "GET", urls[next], nil)
+
+		propagator := otel.GetTextMapPropagator()
+		propagator.Inject(ctx, propagation.HeaderCarrier(req.Header))
+
 		client := &http.Client{
-			Transport: otelhttp.NewTransport(http.DefaultTransport),
+			Transport: http.DefaultTransport,
 		}
 		client.Do(req)
 		return
