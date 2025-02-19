@@ -1,8 +1,6 @@
 # trace-demo
 
-`trace-demo` is a simple demo to generate traces between different operations, using OpenTelemetry to trace the requests, and Jaeger to export and visualize the traces. 
-
-This is a side project to generate test data for developing advanced topology among different modules in [flashcat](https://flashcat.com).
+`trace-demo` is a simple demo to generate traces between different services and operations, using OpenTelemetry to trace the requests, and Jaeger to export and visualize the traces. 
 
 ## Usage
 
@@ -23,24 +21,21 @@ go build
 http://localhost:16686
 ```
 
-3. (Optional) Customize trace services & operations
-
-Edit `config.yaml` to add/remove services & operations, and restart the http server.
-
-A server & operation is defined as below:
+3. (Optional) Customize services & operations of traces
 
 ```yaml
+# config.yaml
 server:
-  <server_name>:
+  <server_name>: # server name will be the service of a trace
     addr: <server_address>
-    uri:
-    - <operation_uri_1>
+    uri: # uris will be the operations of a trace
+    - <operation_uri_1> 
     - <operation_uri_2>
     - ...
 ```
 
 ## Reference
 
-- [OpenTelemetry - Go Jaeger Exporter(TODO: deprecated, use OTLP collector instead)](https://pkg.go.dev/go.opentelemetry.io/otel/exporters/jaeger)
+- [OpenTelemetry - Go Jaeger Exporter (TODO: deprecated, use OTLP collector instead)](https://pkg.go.dev/go.opentelemetry.io/otel/exporters/jaeger)
 - [OpenTelemetry - instrumenting a Go application](https://opentelemetry.io/docs/languages/go/instrumentation/)
 - [Jaeger - apis](https://www.jaegertracing.io/docs/1.66/apis/)
