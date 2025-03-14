@@ -20,6 +20,10 @@ server:
       - /england/manchester
       - /england/liverpool
       - /england/edinburgh
+  gorm:
+    addr: localhost:8083
+    uri:
+      - /gorm/query
 exporter:
   jaeger:
-    addr: http://localhost:14268/api/traces
+    addr: http://127.0.0.1:14268/api/traces

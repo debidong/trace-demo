@@ -25,7 +25,7 @@ func NewRequester(srvName string) *Requester {
 func (r *Requester) StartRequest() {
 	r.stop = make(chan struct{})
 	r.ticker = time.NewTicker(requestInterval)
-	uris := MustLoadConfig().Server[r.srvName].Uri
+	uris := C.Server[r.srvName].Uri
 
 	go func() {
 		for {

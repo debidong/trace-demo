@@ -84,7 +84,7 @@ func newPropagator() propagation.TextMapPropagator {
 }
 
 func newTraceProvider(srvName string) (*trace.TracerProvider, error) {
-	jaegerEndpoint := MustLoadConfig().Exporter["jaeger"].Addr
+	jaegerEndpoint := C.Exporter["jaeger"].Addr
 	traceExporter, err := jaeger.New(
 		jaeger.WithCollectorEndpoint(
 			jaeger.WithEndpoint(jaegerEndpoint),

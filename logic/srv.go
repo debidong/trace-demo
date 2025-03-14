@@ -2,19 +2,18 @@ package logic
 
 import (
 	"context"
-	"math/rand"
 	"net"
 	"net/http"
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
 )
+
+const SrvNameGorm = "gorm"
 
 func NewServer(srvName string) *http.Server {
 	ctx := context.Background()
-	config := MustLoadConfig().Server
+	config := C.Server
 	// Start HTTP server.
 	return &http.Server{
 		Addr:         config[srvName].Addr,
@@ -36,38 +35,16 @@ func newHTTPHandler(srvName string) http.Handler {
 		mux.Handle(pattern, handler)
 	}
 
-	urls := []string{}
-	for srvName, srv := range MustLoadConfig().Server {
-		for _, uri := range srv.Uri {
-			urls = append(urls, FormatRequestURL(srvName, uri))
+	uris := C.Server[srvName].Uri
+	switch srvName {
+	case SrvNameGorm:
+		for _, uri := range uris {
+			handleFunc(uri, handleGorm)
 		}
-	}
-
-	_handler := func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := tracer.Start(r.Context(), r.URL.Path)
-		defer span.End()
-
-		// whether to return immediately
-		if rand.Intn(2) == 0 {
-			return
+	default:
+		for _, uri := range urls {
+			handleFunc(uri, handleCommon)
 		}
-
-		// get resource
-		next := rand.Intn(len(urls))
-		req, _ := http.NewRequestWithContext(ctx, "GET", urls[next], nil)
-
-		propagator := otel.GetTextMapPropagator()
-		propagator.Inject(ctx, propagation.HeaderCarrier(req.Header))
-
-		client := &http.Client{
-			Transport: http.DefaultTransport,
-		}
-		client.Do(req)
-		return
-	}
-
-	for _, uri := range MustLoadConfig().Server[srvName].Uri {
-		handleFunc(uri, _handler)
 	}
 
 	// Add HTTP instrumentation for the whole server.

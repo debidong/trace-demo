@@ -6,7 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var globalConfig *config
+var C *config
 
 type config struct {
 	Server   map[string]server   `yaml:"server"`
@@ -23,10 +23,6 @@ type exporter struct {
 }
 
 func MustLoadConfig(path ...string) *config {
-	if globalConfig != nil {
-		return globalConfig
-	}
-
 	if len(path) != 1 {
 		panic("one path is required")
 	}
@@ -42,6 +38,6 @@ func MustLoadConfig(path ...string) *config {
 		panic(err)
 	}
 
-	globalConfig = &config
-	return globalConfig
+	C = &config
+	return C
 }
